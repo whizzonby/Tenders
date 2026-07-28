@@ -6,8 +6,9 @@ and jump straight to the source to apply.
 
 ## What's actually in here
 
-Real, live sources — not scraped HTML that breaks every redesign, but official
-public APIs:
+Mostly real, live official APIs — plus one careful HTML scrape (Caribbean
+Development Bank) for a source that simply has no API or feed at all, added only
+after checking its robots.txt and Terms for any restriction:
 
 | Source | Coverage | API key needed? |
 |---|---|---|
@@ -18,6 +19,7 @@ public APIs:
 | **World Bank** | Bank-financed procurement notices worldwide | No |
 | **Australia AusTender** | Australian government contract notices | No |
 | **UNDP** | UN Development Programme notices worldwide | No |
+| **Caribbean Development Bank** | CDB-financed procurement notices | No |
 | **Generic RSS** (incl. OECS by default) | Any tender portal that publishes a feed | Depends on the feed |
 
 This is a *foundation*, not a finished universe of every tender on Earth — no such
@@ -32,18 +34,32 @@ Note: World Bank, AusTender, and UK Find a Tender include already-awarded contra
 notices alongside open notices (their feeds mix the two) — useful for market
 intelligence even where the bid window has closed.
 
-Sources investigated and found **not** to have a usable public API (HTML/login-only,
-or blocked) as of this research pass: Inter-American Development Bank (notices only
-render via an embedded Power BI report; its open-data API only has a historical bulk
-CSV, not live tenders), Caribbean Development Bank (no API, only a generic non-
-procurement news RSS), PAHO (routes through UNGM, which is registration-gated),
-Commonwealth Secretariat (In-Tend portal — public view is empty without a buyer
-login), CARICOM (declares an RSS feed but it's blocked by their WAF), Government of
-Jamaica GOJEP (old-style postback search UI, no JSON/RSS surface), CanadaBuys (its
-open-data CSV dump is archived/stale), ADB (Cloudflare bot protection blocks
-automated access entirely), UNGM (ToS explicitly restricts automated scraping).
-These are candidates for careful, ToS-checked HTML scraping later, not API
-integration — treat that as a separate, higher-effort pass per source.
+Sources investigated and found to have **no usable public API**: Inter-American
+Development Bank (notices only render via an embedded Power BI report; its open-data
+API only has a historical bulk CSV, not live tenders), PAHO (routes through UNGM,
+which is registration-gated), Commonwealth Secretariat (In-Tend portal — public view
+is empty without a buyer login), Government of Jamaica GOJEP (old-style postback
+search UI, no JSON/RSS surface), ADB (Cloudflare bot protection blocks automated
+access entirely), UNGM (ToS explicitly restricts automated scraping).
+
+Of those, most are also dead ends for HTML scraping, not just API access: GOJEP's
+listings are behind a CAPTCHA-gated search form with no server-rendered results
+available from a plain request — solving CAPTCHAs is out of scope. IDB, PAHO/UNGM,
+and Commonwealth Secretariat have no public content to scrape at all (embedded BI
+report, registration wall, or login wall respectively) — a scraper can't extract data
+that was never served to begin with.
+
+Two were technically scrapable but skipped anyway on principle:
+- **CanadaBuys** — its robots.txt explicitly disallows every crawler except
+  Googlebot/Bingbot (`Disallow: /`), and even those two are blocked from individual
+  tender detail pages. That's an unambiguous "don't scrape this" signal — respected,
+  not routed around.
+- **CARICOM** — the listing page itself is a clean, static, ToS-unrestricted table,
+  but their robots.txt explicitly names and blocks `anthropic-ai` (alongside GPTBot
+  and CCBot) sitewide. A generic scraper UA isn't literally that string, but the
+  site owner's intent is clearly "don't let Anthropic's AI use this content" —
+  building around that on a technicality isn't something to do quietly, so it's
+  skipped.
 
 ## How it works
 

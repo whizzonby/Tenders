@@ -10,6 +10,7 @@ const { scrapeWorldBank } = require('./scrapers/worldBank');
 const { scrapeAuTender } = require('./scrapers/auTender');
 const { scrapeUkFindTender } = require('./scrapers/ukFindTender');
 const { scrapeUndp } = require('./scrapers/undp');
+const { scrapeCdb } = require('./scrapers/cdb');
 const { scrapeGenericRSS } = require('./scrapers/genericRSS');
 
 function loadFeedsConfig() {
@@ -35,6 +36,7 @@ async function runAllScrapers() {
     { name: 'au_tender', fn: () => scrapeAuTender({ daysBack: 14 }) },
     { name: 'uk_find_tender', fn: () => scrapeUkFindTender({ daysBack: 7 }) },
     { name: 'undp', fn: () => scrapeUndp() },
+    { name: 'cdb', fn: () => scrapeCdb() },
     { name: 'rss_feeds', fn: () => scrapeGenericRSS(loadFeedsConfig()) },
   ];
 
