@@ -8,6 +8,8 @@ const { scrapeTedEU } = require('./scrapers/tedEU');
 const { scrapeSamGov } = require('./scrapers/samGov');
 const { scrapeWorldBank } = require('./scrapers/worldBank');
 const { scrapeAuTender } = require('./scrapers/auTender');
+const { scrapeUkFindTender } = require('./scrapers/ukFindTender');
+const { scrapeUndp } = require('./scrapers/undp');
 const { scrapeGenericRSS } = require('./scrapers/genericRSS');
 
 function loadFeedsConfig() {
@@ -31,6 +33,8 @@ async function runAllScrapers() {
     { name: 'sam_gov', fn: () => scrapeSamGov({ daysBack: 7 }) },
     { name: 'world_bank', fn: () => scrapeWorldBank({ rows: 200 }) },
     { name: 'au_tender', fn: () => scrapeAuTender({ daysBack: 14 }) },
+    { name: 'uk_find_tender', fn: () => scrapeUkFindTender({ daysBack: 7 }) },
+    { name: 'undp', fn: () => scrapeUndp() },
     { name: 'rss_feeds', fn: () => scrapeGenericRSS(loadFeedsConfig()) },
   ];
 

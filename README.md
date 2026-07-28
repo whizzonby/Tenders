@@ -11,31 +11,39 @@ public APIs:
 
 | Source | Coverage | API key needed? |
 |---|---|---|
-| **UK Contracts Finder** | UK public sector tenders | No |
+| **UK Contracts Finder** | UK public sector tenders (lower-value, England-focused) | No |
+| **UK Find a Tender Service** | UK/NI higher-value procurement, full OCDS data | No |
 | **EU TED** (Tenders Electronic Daily) | All 27 EU member states | No |
 | **US SAM.gov** | US federal contract opportunities | Yes, free — see below |
 | **World Bank** | Bank-financed procurement notices worldwide | No |
 | **Australia AusTender** | Australian government contract notices | No |
-| **Generic RSS** | Any tender portal that publishes a feed | Depends on the feed |
+| **UNDP** | UN Development Programme notices worldwide | No |
+| **Generic RSS** (incl. OECS by default) | Any tender portal that publishes a feed | Depends on the feed |
 
 This is a *foundation*, not a finished universe of every tender on Earth — no such
 scraper exists (that's not how any real aggregator, including globaltenders.com,
 actually works). You add more sources over time by either:
-1. Dropping a feed URL into `backend/feeds.config.json` (copy from
-   `feeds.config.example.json`) — works for any portal with RSS/Atom, no code needed.
+1. Dropping a feed URL into `backend/feeds.config.json` — works for any portal with
+   RSS/Atom, no code needed (see the OECS entry already in there as an example).
 2. Writing a new file in `backend/scrapers/` following the pattern of the existing
    ones, and registering it in `backend/scheduler.js`.
 
-Note: World Bank and AusTender include already-awarded contract notices alongside open
-notices (both sources' feeds mix the two) — useful for market intelligence even where
-the bid window has closed.
+Note: World Bank, AusTender, and UK Find a Tender include already-awarded contract
+notices alongside open notices (their feeds mix the two) — useful for market
+intelligence even where the bid window has closed.
 
-Good candidates to add next: CanadaBuys (its old open-data CSV dump is archived/stale;
-the live data now needs API access — check `canadabuys.canada.ca` for current terms),
-New Zealand GETS, Inter-American Development Bank, UNGM (has a public search you'd
-need to check ToS on before automating), national portals for countries you care
-about, industry-specific RFP boards. ADB (Asian Development Bank) sits behind
-Cloudflare bot protection and can't be automated without violating that protection.
+Sources investigated and found **not** to have a usable public API (HTML/login-only,
+or blocked) as of this research pass: Inter-American Development Bank (notices only
+render via an embedded Power BI report; its open-data API only has a historical bulk
+CSV, not live tenders), Caribbean Development Bank (no API, only a generic non-
+procurement news RSS), PAHO (routes through UNGM, which is registration-gated),
+Commonwealth Secretariat (In-Tend portal — public view is empty without a buyer
+login), CARICOM (declares an RSS feed but it's blocked by their WAF), Government of
+Jamaica GOJEP (old-style postback search UI, no JSON/RSS surface), CanadaBuys (its
+open-data CSV dump is archived/stale), ADB (Cloudflare bot protection blocks
+automated access entirely), UNGM (ToS explicitly restricts automated scraping).
+These are candidates for careful, ToS-checked HTML scraping later, not API
+integration — treat that as a separate, higher-effort pass per source.
 
 ## How it works
 
@@ -77,21 +85,28 @@ still works.
 
 ## Deploy to your EC2 instance + domain
 
-`deploy/ec2-setup.sh` is written to be safe on a shared EC2 box that already runs
-other apps: it never runs a blanket `apt-get upgrade`, reuses Node/nginx/certbot/pm2
-if they're already installed instead of reinstalling, deploys into its own directory
-(`/var/www/contracts`) rather than wherever you happen to clone it, and adds its own
-nginx server block matched by domain — other sites' nginx configs and PM2 processes
-are left untouched. The PM2 process is named `tenders-whizzonby`.
+This runs on a shared EC2 box alongside several other apps, all served through
+**Apache** (not nginx — an earlier version of this deploy script installed nginx,
+which lost the fight for port 80 against the Apache that was already running every
+other site here, and silently never actually served anything; see the comment at the
+top of `deploy/ec2-setup.sh` for the full story). `deploy/ec2-setup.sh` reflects the
+real setup: it reuses Node/Apache/certbot/pm2 if already installed, deploys into its
+own directory (`/var/www/contracts`), adds its own Apache vhost matched by domain
+(other sites' vhosts and PM2 processes are untouched), and auto-picks a free local
+port for the app rather than assuming 3000 is free — it wasn't; another app already
+had it. The PM2 process is named `tenders-whizzonby`.
 
+**First-time setup:**
 1. Point your domain's DNS A record (`tenders.whizzonby.com`) at the EC2 instance's
    public IP.
-2. Copy the whole `contract-tracker/` project to the instance somewhere temporary
-   (git clone, scp, or rsync — the script copies it into `/var/www/contracts` itself,
-   so the temporary location doesn't matter).
-3. SSH in and run:
+2. Clone the repo directly into place:
    ```bash
-   cd contract-tracker
+   sudo mkdir -p /var/www/contracts && sudo chown $USER:$USER /var/www/contracts
+   git clone https://github.com/whizzonby/Tenders.git /var/www/contracts
+   ```
+3. Run the setup script:
+   ```bash
+   cd /var/www/contracts
    bash deploy/ec2-setup.sh tenders.whizzonby.com
    ```
 4. Add your `SAM_GOV_API_KEY` to `/var/www/contracts/backend/.env` (the script
@@ -102,12 +117,19 @@ are left untouched. The PM2 process is named `tenders-whizzonby`.
 5. Open your EC2 security group and confirm ports 80 and 443 are open to the
    internet (this is the most common reason a fresh EC2 box doesn't respond).
 
-To update after a code change: re-run `bash deploy/ec2-setup.sh tenders.whizzonby.com`
-(it pulls/re-syncs into `/var/www/contracts` and restarts nothing by itself — follow
-with `pm2 restart tenders-whizzonby`), or just `pm2 restart tenders-whizzonby` after
-editing files directly in `/var/www/contracts`.
+**To update after a code change** (don't re-run the setup script against an already-
+running deploy — its port auto-picker would see the app's own current port as
+"taken" and move it for no reason):
+```bash
+cd /var/www/contracts
+git pull
+cd backend
+npm install --omit=dev
+pm2 restart tenders-whizzonby
+```
 To watch logs: `pm2 logs tenders-whizzonby`.
-To trigger a manual re-scrape without waiting for the cron: `curl -X POST http://localhost:3000/api/scrape-now`.
+To trigger a manual re-scrape without waiting for the cron: `curl -X POST http://localhost:3001/api/scrape-now`
+(or whatever port `backend/.env` has `PORT` set to on this box).
 
 ## A note on scope and legality
 
