@@ -11,6 +11,11 @@ const { scrapeAuTender } = require('./scrapers/auTender');
 const { scrapeUkFindTender } = require('./scrapers/ukFindTender');
 const { scrapeUndp } = require('./scrapers/undp');
 const { scrapeCdb } = require('./scrapers/cdb');
+const { scrapeGuyanaEprocure } = require('./scrapers/guyanaEprocure');
+const { scrapeTtProcureTT } = require('./scrapers/ttProcureTT');
+const { scrapeColombiaSecop } = require('./scrapers/colombiaSecop');
+const { scrapeBrazilCompras } = require('./scrapers/brazilCompras');
+const { scrapeDominicanRepublic } = require('./scrapers/dominicanRepublic');
 const { scrapeGenericRSS } = require('./scrapers/genericRSS');
 
 function loadFeedsConfig() {
@@ -37,6 +42,11 @@ async function runAllScrapers() {
     { name: 'uk_find_tender', fn: () => scrapeUkFindTender({ daysBack: 7 }) },
     { name: 'undp', fn: () => scrapeUndp() },
     { name: 'cdb', fn: () => scrapeCdb() },
+    { name: 'guyana_eprocure', fn: () => scrapeGuyanaEprocure() },
+    { name: 'tt_procurett', fn: () => scrapeTtProcureTT() },
+    { name: 'colombia_secop', fn: () => scrapeColombiaSecop({ limit: 100 }) },
+    { name: 'brazil_compras', fn: () => scrapeBrazilCompras({ daysBack: 21 }) },
+    { name: 'dominican_republic', fn: () => scrapeDominicanRepublic({ daysBack: 75 }) },
     { name: 'rss_feeds', fn: () => scrapeGenericRSS(loadFeedsConfig()) },
   ];
 

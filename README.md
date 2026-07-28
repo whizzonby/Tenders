@@ -6,9 +6,9 @@ and jump straight to the source to apply.
 
 ## What's actually in here
 
-Mostly real, live official APIs — plus one careful HTML scrape (Caribbean
-Development Bank) for a source that simply has no API or feed at all, added only
-after checking its robots.txt and Terms for any restriction:
+Mostly real, live official APIs — plus two careful HTML scrapes (Caribbean
+Development Bank, Trinidad & Tobago's ProcureTT) for sources that simply have no API
+or feed at all, added only after checking robots.txt and Terms for any restriction:
 
 | Source | Coverage | API key needed? |
 |---|---|---|
@@ -20,6 +20,11 @@ after checking its robots.txt and Terms for any restriction:
 | **Australia AusTender** | Australian government contract notices | No |
 | **UNDP** | UN Development Programme notices worldwide | No |
 | **Caribbean Development Bank** | CDB-financed procurement notices | No |
+| **Guyana eProcure** | Guyanese government bid opportunities | No |
+| **Trinidad & Tobago ProcureTT** | National tender notices | No |
+| **Colombia SECOP II** | Colombian public procurement | No |
+| **Brazil Compras.gov.br / PNCP** | Federal competitive tenders (Concorrência, Pregão) | No |
+| **Dominican Republic** | DGCP procurement (via OCP's bulk data mirror — runs ~6-7 weeks behind real time) | No |
 | **Generic RSS** (incl. OECS by default) | Any tender portal that publishes a feed | Depends on the feed |
 
 This is a *foundation*, not a finished universe of every tender on Earth — no such
@@ -32,7 +37,10 @@ actually works). You add more sources over time by either:
 
 Note: World Bank, AusTender, and UK Find a Tender include already-awarded contract
 notices alongside open notices (their feeds mix the two) — useful for market
-intelligence even where the bid window has closed.
+intelligence even where the bid window has closed. Colombia SECOP's notice detail
+links (`community.secop.gov.co`) sit behind a WAF that can return a bot-check page to
+automated tools even on a single clean request — the data itself is legitimate, real
+browsers clicking through should pass fine.
 
 Sources investigated and found to have **no usable public API**: Inter-American
 Development Bank (notices only render via an embedded Power BI report; its open-data
@@ -49,7 +57,7 @@ and Commonwealth Secretariat have no public content to scrape at all (embedded B
 report, registration wall, or login wall respectively) — a scraper can't extract data
 that was never served to begin with.
 
-Two were technically scrapable but skipped anyway on principle:
+Several were technically scrapable but skipped anyway on principle:
 - **CanadaBuys** — its robots.txt explicitly disallows every crawler except
   Googlebot/Bingbot (`Disallow: /`), and even those two are blocked from individual
   tender detail pages. That's an unambiguous "don't scrape this" signal — respected,
@@ -60,6 +68,50 @@ Two were technically scrapable but skipped anyway on principle:
   site owner's intent is clearly "don't let Anthropic's AI use this content" —
   building around that on a technicality isn't something to do quietly, so it's
   skipped.
+- **Guatemala** Guatecompras — has a real, documented OCDS API, but robots.txt
+  explicitly names and blocks `ClaudeBot` (plus GPTBot, Google-Extended, CCBot,
+  Amazonbot) — not tested live, let alone integrated.
+- **Zambia** e-GP (ZPPA) — API works, but the site's own Terms of Service state
+  "You specifically agree not to access (or attempt to access) the Site through any
+  automated means" — a direct, generic prohibition (unlike the ClaudeBot/anthropic-ai
+  cases, this one isn't identity-specific, and it still applies).
+- **Mauritius** e-Procurement — a working JSON endpoint exists, but robots.txt
+  disallows the only path (`/search`) that returns it.
+
+### Tier 2 (national portals) progress
+
+Confirmed real, free public APIs exist for these but they aren't built yet —
+straightforward to add:
+- **South Africa** eTenders (OCDS API, `ocds-api.etenders.gov.za`)
+- **Kenya** PPIP (OCDS bulk files)
+- **Tanzania** NeST (OCDS API, server is intermittently slow)
+- **Rwanda** UMUCYO (OCDS monthly bulk datasets)
+- **Ghana** GHANEPS (OCDS monthly record packages, zipped)
+- **Argentina** COMPR.AR (CSV distributions via `datos.gob.ar`, not OCDS)
+- **Peru** SEACE (OCDS monthly bulk ZIP files via OECE)
+
+Found but not usable without something this project can't provide:
+- **Chile** ChileCompra — real API, but the free key requires a Chilean national ID
+  (Clave Única/RUT) to register for — no self-serve path for a non-Chilean developer.
+- **Costa Rica** SICOP — a live backend API confirmed to exist
+  (`prod-api.sicop.go.cr`) but the actual query endpoint wasn't found within a
+  reasonable research effort; would need browser DevTools network inspection to
+  locate.
+- **Ecuador** SERCOP — publishes real OCDS data, but every host tried
+  (`datosabiertos.compraspublicas.gob.ec`, `datosabiertos.gob.ec`) was blocked or
+  timed out from this network — worth retrying from elsewhere before ruling out.
+- **Panama** PanamaCompra — real OCDS API, but no working way found to query for
+  recent data specifically; every sort/pagination parameter tried returns the same
+  ~10 records from mid-2024, and the pagination cursor looks like an internal
+  Elasticsearch token not meant to be hand-constructed.
+- **Tunisia** TUNEPS — fully client-rendered Angular SPA with what looks like
+  client-side-encrypted API payloads (loads `crypto-js`/`jsencrypt`) — out of scope
+  for a static scraper.
+- **Trinidad & Tobago** e-Tendering (`etender.gov.tt`) — domain no longer resolves;
+  T&T is still covered via ProcureTT above, its real active portal.
+- **Morocco** Marchés Publics — server-rendered but requires an ASP.NET POST-postback
+  form submission (no default listing on GET) plus WAF friction — technically
+  possible, not yet built.
 
 ## How it works
 
