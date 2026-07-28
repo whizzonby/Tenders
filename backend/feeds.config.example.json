@@ -1,0 +1,8 @@
+[
+  {
+    "name": "example_feed",
+    "url": "https://example.com/tenders/rss.xml",
+    "country": "Example Country",
+    "sector_label": "General"
+  }
+]

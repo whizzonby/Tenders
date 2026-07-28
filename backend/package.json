@@ -1,0 +1,22 @@
+{
+  "name": "contract-tracker-backend",
+  "version": "1.0.0",
+  "description": "Aggregates public tenders/contracts from multiple sources into a searchable dashboard",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "scrape": "node scheduler.js --once",
+    "check-links": "node scripts/checkLinks.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^2.7.0",
+    "rss-parser": "^3.13.0",
+    "dotenv": "^16.4.5"
+  }
+}

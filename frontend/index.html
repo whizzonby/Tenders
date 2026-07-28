@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ledger — Contract & Tender Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1220;
+    --ink-2:#141F33;
+    --paper:#F6F5F1;
+    --paper-2:#FFFFFF;
+    --line:#DEDCD3;
+    --gold:#B8842E;
+    --gold-dim:#E7D3AC;
+    --green:#2F6D52;
+    --red:#B0432F;
+    --text:#1B1F27;
+    --text-dim:#545A68;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --serif: 'Fraunces', Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--text);font-family:var(--sans);}
+  a{color:inherit;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    background:var(--ink);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:24px;
+    padding:14px 24px;
+    position:sticky; top:0; z-index:20;
+    border-bottom:3px solid var(--gold);
+  }
+  .brand{
+    font-family:var(--serif);
+    font-size:20px;
+    font-weight:600;
+    letter-spacing:0.02em;
+    display:flex; align-items:center; gap:8px;
+    white-space:nowrap;
+  }
+  .brand .mark{
+    width:22px;height:22px;border:2px solid var(--gold);border-radius:2px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:11px;color:var(--gold);
+  }
+  .searchwrap{flex:1; display:flex;}
+  .searchwrap input{
+    width:100%;
+    background:var(--ink-2);
+    border:1px solid #2A3650;
+    color:#fff;
+    padding:10px 14px;
+    border-radius:4px;
+    font-family:var(--sans);
+    font-size:14px;
+  }
+  .searchwrap input::placeholder{color:#8891A3;}
+  .stat-pill{
+    font-family:var(--mono); font-size:12px; color:var(--gold-dim);
+    border:1px solid #2A3650; padding:6px 10px; border-radius:4px; white-space:nowrap;
+  }
+
+  /* Google Website Translator widget — restyled to fit the dark topbar */
+  .translate-widget{white-space:nowrap;}
+  .translate-widget .goog-te-gadget{font-family:var(--sans) !important; font-size:0 !important; color:transparent !important;}
+  .translate-widget select.goog-te-combo{
+    font-family:var(--sans); font-size:12px; padding:6px 8px; border-radius:4px;
+    border:1px solid #2A3650; background:var(--ink-2); color:#fff; cursor:pointer;
+  }
+  /* Stop Google's translate banner iframe from pushing the whole page down */
+  .goog-te-banner-frame{display:none !important;}
+  body{top:0 !important;}
+
+  /* ---------- Layout ---------- */
+  .layout{display:flex; max-width:1400px; margin:0 auto;}
+  .filters{
+    width:280px; flex-shrink:0;
+    padding:24px 18px;
+    border-right:1px solid var(--line);
+    min-height:calc(100vh - 60px);
+  }
+  .filters h3{
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--text-dim); margin:22px 0 10px; font-weight:500;
+  }
+  .filters h3:first-child{margin-top:0;}
+  .field{margin-bottom:10px;}
+  .field label{display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:4px;}
+  .field select, .field input{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:4px;
+    font-family:var(--sans); font-size:13px; background:var(--paper-2); color:var(--text);
+  }
+  .field.range{display:flex; gap:8px;}
+  .apply-btn{
+    width:100%; margin-top:16px; padding:10px; background:var(--ink); color:#fff;
+    border:none; border-radius:4px; font-family:var(--sans); font-weight:600; font-size:13px;
+    cursor:pointer; letter-spacing:0.02em;
+  }
+  .apply-btn:hover{background:var(--ink-2);}
+  .reset-link{
+    display:block; text-align:center; margin-top:8px; font-size:12px; color:var(--text-dim);
+    cursor:pointer; text-decoration:underline;
+  }
+
+  .main{flex:1; padding:24px; min-width:0;}
+  .main-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:16px; flex-wrap:wrap; gap:8px;}
+  .main-head h1{font-family:var(--serif); font-size:22px; font-weight:600; margin:0;}
+  .result-count{font-family:var(--mono); font-size:12.5px; color:var(--text-dim);}
+  .sortbar{display:flex; gap:8px; align-items:center; font-size:12.5px; color:var(--text-dim); margin-bottom:14px;}
+  .sortbar select{font-family:var(--sans); font-size:12px; border:1px solid var(--line); border-radius:4px; padding:4px 8px; background:var(--paper-2);}
+
+  /* ---------- Notice cards ---------- */
+  .notice{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-left:3px solid var(--ink);
+    border-radius:4px;
+    padding:16px 18px;
+    margin-bottom:12px;
+    display:grid;
+    grid-template-columns: 1fr 160px;
+    gap:10px 16px;
+    position:relative;
+  }
+  .notice.urgent{border-left-color:var(--red);}
+  .notice.open{border-left-color:var(--green);}
+  .notice-title{font-family:var(--serif); font-size:17px; font-weight:600; margin:0 0 6px; line-height:1.3;}
+  .notice-title a{text-decoration:none;}
+  .notice-title a:hover{text-decoration:underline;}
+  .notice-meta{font-size:13.5px; color:var(--text-dim); display:flex; flex-wrap:wrap; gap:4px 14px; margin-bottom:8px;}
+  .notice-meta b{color:var(--text); font-weight:500;}
+  .notice-desc{font-size:13.5px; color:var(--text-dim); line-height:1.5; max-height:3em; overflow:hidden;}
+  .notice-tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
+  .tag{
+    font-family:var(--mono); font-size:11.5px; padding:3px 8px; border-radius:20px;
+    background:var(--paper); border:1px solid var(--line); color:var(--text-dim);
+  }
+  .notice-side{
+    text-align:right; display:flex; flex-direction:column; align-items:flex-end; justify-content:space-between; gap:14px;
+  }
+  .deadline-stamp{
+    font-family:var(--mono); font-size:12px; text-align:right;
+    border:1px dashed var(--line); border-radius:4px; padding:8px 10px;
+  }
+  .deadline-stamp .days{font-size:20px; font-weight:600; display:block; font-family:var(--serif);}
+  .deadline-stamp.urgent{border-color:var(--red); color:var(--red);}
+  .deadline-stamp.open{border-color:var(--green); color:var(--green);}
+  .apply-link{
+    font-family:var(--sans); font-size:12px; font-weight:600; color:#fff; background:var(--gold);
+    padding:8px 14px; border-radius:4px; text-decoration:none; white-space:nowrap;
+  }
+  .apply-link:hover{background:#9c6f24;}
+  .value-tag{font-family:var(--mono); font-size:12px; color:var(--text);}
+
+  .empty, .loading{
+    text-align:center; padding:60px 20px; color:var(--text-dim); font-family:var(--sans);
+  }
+  .empty h2{font-family:var(--serif); color:var(--text); font-size:20px;}
+
+  .pagination{display:flex; justify-content:center; gap:10px; margin-top:20px; font-family:var(--mono); font-size:13px;}
+  .pagination button{
+    padding:6px 12px; border:1px solid var(--line); background:var(--paper-2); border-radius:4px; cursor:pointer;
+  }
+  .pagination button:disabled{opacity:0.4; cursor:default;}
+
+  /* ---------- Detail page ---------- */
+  .detail-layout{max-width:820px; margin:0 auto; padding:32px 24px;}
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px; font-family:var(--sans); font-size:13px;
+    color:var(--text-dim); text-decoration:none; margin-bottom:18px;
+  }
+  .back-link:hover{color:var(--text);}
+  .detail-card{
+    background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--ink);
+    border-radius:4px; padding:28px 32px;
+  }
+  .detail-card.urgent{border-left-color:var(--red);}
+  .detail-card.open{border-left-color:var(--green);}
+  .detail-title{font-family:var(--serif); font-size:26px; font-weight:600; line-height:1.3; margin:0 0 14px;}
+  .detail-meta{display:flex; flex-wrap:wrap; gap:6px 20px; font-size:13.5px; color:var(--text-dim); margin-bottom:16px;}
+  .detail-meta b{color:var(--text); font-weight:500;}
+  .detail-tags{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px;}
+  .detail-deadline{
+    display:inline-block; font-family:var(--mono); font-size:13px; border:1px dashed var(--line);
+    border-radius:4px; padding:10px 14px; margin-bottom:22px;
+  }
+  .detail-deadline.urgent{border-color:var(--red); color:var(--red);}
+  .detail-deadline.open{border-color:var(--green); color:var(--green);}
+  .detail-deadline .days{font-size:22px; font-weight:600; font-family:var(--serif); display:block;}
+  .detail-desc{font-size:14.5px; line-height:1.7; color:var(--text); white-space:pre-wrap; margin-bottom:26px;}
+  .detail-cta{
+    display:inline-flex; align-items:center; gap:8px; font-family:var(--sans); font-size:14px; font-weight:600;
+    color:#fff; background:var(--gold); padding:12px 20px; border-radius:4px; text-decoration:none;
+  }
+  .detail-cta:hover{background:#9c6f24;}
+  .detail-note{font-size:12.5px; color:var(--text-dim); margin-top:12px;}
+
+  @media (max-width:820px){
+    .layout{flex-direction:column;}
+    .filters{width:100%; border-right:none; border-bottom:1px solid var(--line);}
+    .notice{grid-template-columns:1fr;}
+    .notice-side{flex-direction:row; align-items:center;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="mark">§</span>Ledger</div>
+  <div class="searchwrap">
+    <input id="keyword" type="text" placeholder="Search contracts — e.g. &quot;IT services&quot;, &quot;road construction&quot;, &quot;consulting&quot;..." />
+  </div>
+  <div class="stat-pill" id="dbStat">loading…</div>
+  <div id="google_translate_element" class="translate-widget"></div>
+  <script>
+    function googleTranslateElementInit(){
+      new google.translate.TranslateElement(
+        { pageLanguage: 'auto', includedLanguages: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE },
+        'google_translate_element'
+      );
+    }
+  </script>
+  <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</div>
+
+<div class="layout" id="listView">
+  <aside class="filters">
+    <h3>Source</h3>
+    <div class="field">
+      <select id="f-source"><option value="">All sources</option></select>
+    </div>
+
+    <h3>Location</h3>
+    <div class="field">
+      <select id="f-country"><option value="">All countries</option></select>
+    </div>
+
+    <h3>Sector</h3>
+    <div class="field">
+      <select id="f-sector"><option value="">All sectors</option></select>
+    </div>
+
+    <h3>Contract value (USD-equiv, approx)</h3>
+    <div class="field range">
+      <input id="f-minValue" type="number" placeholder="Min" />
+      <input id="f-maxValue" type="number" placeholder="Max" />
+    </div>
+
+    <h3>Deadline</h3>
+    <div class="field">
+      <label>Closing after</label>
+      <input id="f-deadlineAfter" type="date" />
+    </div>
+    <div class="field">
+      <label>Closing before</label>
+      <input id="f-deadlineBefore" type="date" />
+    </div>
+
+    <h3>Published</h3>
+    <div class="field">
+      <label>Published since</label>
+      <input id="f-publishedAfter" type="date" />
+    </div>
+
+    <button class="apply-btn" id="applyBtn">Apply filters</button>
+    <span class="reset-link" id="resetBtn">Reset all</span>
+  </aside>
+
+  <main class="main">
+    <div class="main-head">
+      <h1>Open contracts &amp; tenders</h1>
+      <div class="result-count" id="resultCount"></div>
+    </div>
+    <div class="sortbar">
+      Sort by
+      <select id="sortSelect">
+        <option value="published_desc">Newest published</option>
+        <option value="deadline_asc">Deadline — soonest first</option>
+        <option value="deadline_desc">Deadline — latest first</option>
+        <option value="value_desc">Value — highest first</option>
+        <option value="value_asc">Value — lowest first</option>
+      </select>
+    </div>
+
+    <div id="results" class="loading">Loading contracts…</div>
+    <div class="pagination" id="pagination" style="display:none;">
+      <button id="prevPage">&larr; Prev</button>
+      <span id="pageLabel"></span>
+      <button id="nextPage">Next &rarr;</button>
+    </div>
+  </main>
+</div>
+
+<div class="detail-layout" id="detailView" style="display:none;"></div>
+
+<script>
+const API = ''; // same-origin; set to e.g. 'https://api.yourdomain.com' if backend is on a different host
+let state = { page: 1, pageSize: 20 };
+
+function qs(id){ return document.getElementById(id); }
+
+const SOURCE_LABELS = {
+  uk_contracts_finder: 'UK Contracts Finder',
+  ted_eu: 'EU TED',
+  sam_gov: 'US SAM.gov',
+  world_bank: 'World Bank',
+  au_tender: 'Australia AusTender',
+};
+
+function formatSource(source){
+  if(!source) return '';
+  if(SOURCE_LABELS[source]) return SOURCE_LABELS[source];
+  const name = source.startsWith('rss:') ? source.slice(4) : source;
+  return name.replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+async function loadFacets(){
+  try{
+    const res = await fetch(`${API}/api/contracts/facets`);
+    const data = await res.json();
+    const fill = (sel, items, valueKey, formatter) => {
+      for(const item of items){
+        if(!item[valueKey]) continue;
+        const opt = document.createElement('option');
+        opt.value = item[valueKey];
+        opt.textContent = `${formatter ? formatter(item[valueKey]) : item[valueKey]} (${item.c})`;
+        sel.appendChild(opt);
+      }
+    };
+    fill(qs('f-source'), data.sources, 'source', formatSource);
+    fill(qs('f-country'), data.countries, 'country');
+    fill(qs('f-sector'), data.sectors, 'sector_label');
+  }catch(e){ console.warn('facets failed', e); }
+}
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const diff = (new Date(dateStr) - new Date());
+  return Math.ceil(diff / (1000*60*60*24));
+}
+
+function fmtDate(d){
+  if(!d) return '—';
+  return d;
+}
+
+function renderResults(payload){
+  const wrap = qs('results');
+  wrap.classList.remove('loading');
+  qs('resultCount').textContent = `${payload.total.toLocaleString()} result${payload.total===1?'':'s'}`;
+
+  if(!payload.results.length){
+    wrap.innerHTML = `<div class="empty"><h2>No contracts match these filters</h2><p>Try widening the deadline window, clearing the sector filter, or searching a broader keyword.</p></div>`;
+    qs('pagination').style.display = 'none';
+    return;
+  }
+
+  wrap.innerHTML = payload.results.map(r => {
+    const days = daysUntil(r.deadline_date);
+    let cls = '';
+    let stampCls = '';
+    if(days !== null){
+      if(days < 0){ cls=''; stampCls=''; }
+      else if(days <= 7){ cls='urgent'; stampCls='urgent'; }
+      else { cls='open'; stampCls='open'; }
+    }
+    const value = r.value_amount ? `<span class="value-tag">${r.value_currency||''} ${Number(r.value_amount).toLocaleString()}</span>` : '';
+    const deadlineBlock = r.deadline_date
+      ? `<div class="deadline-stamp ${stampCls}"><span class="days">${days!==null && days>=0 ? days : '—'}</span>${days!==null && days>=0 ? 'days left' : 'deadline passed'}<br>${fmtDate(r.deadline_date)}</div>`
+      : `<div class="deadline-stamp">no fixed<br>deadline</div>`;
+    return `
+    <article class="notice ${cls}">
+      <div>
+        <h2 class="notice-title"><a href="/contract/${encodeURIComponent(r.id)}">${escapeHtml(r.title)}</a></h2>
+        <div class="notice-meta">
+          ${r.buyer ? `<span><b>${escapeHtml(r.buyer)}</b></span>` : ''}
+          ${r.country ? `<span>${escapeHtml(r.country)}</span>` : ''}
+          <span>Published ${fmtDate(r.published_date)}</span>
+        </div>
+        ${r.description ? `<div class="notice-desc">${escapeHtml((r.description||'').slice(0,220))}</div>` : ''}
+        <div class="notice-tags">
+          <span class="tag">${escapeHtml(formatSource(r.source))}</span>
+          ${r.sector_label ? `<span class="tag">${escapeHtml(r.sector_label)}</span>` : ''}
+          ${value ? `<span class="tag">${value}</span>` : ''}
+        </div>
+      </div>
+      <div class="notice-side">
+        ${deadlineBlock}
+        <a class="apply-link" href="${r.url}" target="_blank" rel="noopener">View &amp; apply →</a>
+      </div>
+    </article>`;
+  }).join('');
+
+  const totalPages = Math.max(Math.ceil(payload.total / payload.pageSize), 1);
+  qs('pagination').style.display = 'flex';
+  qs('pageLabel').textContent = `page ${payload.page} / ${totalPages}`;
+  qs('prevPage').disabled = payload.page <= 1;
+  qs('nextPage').disabled = payload.page >= totalPages;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+async function search(){
+  qs('results').classList.add('loading');
+  qs('results').innerHTML = 'Loading contracts…';
+  const params = new URLSearchParams();
+  const keyword = qs('keyword').value.trim();
+  if(keyword) params.set('keyword', keyword);
+  const map = ['source','country','sector','minValue','maxValue','deadlineBefore','deadlineAfter','publishedAfter'];
+  for(const key of map){
+    const el = qs('f-' + key);
+    if(el && el.value) params.set(key, el.value);
+  }
+  params.set('page', state.page);
+  params.set('pageSize', state.pageSize);
+  params.set('sort', qs('sortSelect').value);
+
+  try{
+    const res = await fetch(`${API}/api/contracts?${params.toString()}`);
+    const data = await res.json();
+    renderResults(data);
+  }catch(e){
+    qs('results').innerHTML = `<div class="empty"><h2>Couldn't reach the server</h2><p>Check that the backend is running.</p></div>`;
+  }
+}
+
+async function loadHealth(){
+  try{
+    const res = await fetch(`${API}/api/contracts?pageSize=1`);
+    const data = await res.json();
+    qs('dbStat').textContent = `${data.total.toLocaleString()} contracts indexed`;
+  }catch(e){ qs('dbStat').textContent = 'offline'; }
+}
+
+function statusClass(days){
+  if(days === null || days < 0) return '';
+  return days <= 7 ? 'urgent' : 'open';
+}
+
+async function renderDetail(id){
+  qs('listView').style.display = 'none';
+  const detail = qs('detailView');
+  detail.style.display = 'block';
+  detail.innerHTML = '<div class="loading">Loading contract…</div>';
+
+  try{
+    const res = await fetch(`${API}/api/contracts/${encodeURIComponent(id)}`);
+    if(res.status === 404){
+      detail.innerHTML = `
+        <a class="back-link" href="/">&larr; Back to results</a>
+        <div class="empty"><h2>Contract not found</h2><p>It may have been removed during a link cleanup pass.</p></div>`;
+      return;
+    }
+    const r = await res.json();
+    const days = daysUntil(r.deadline_date);
+    const cls = statusClass(days);
+    const value = r.value_amount ? `<span class="value-tag">${r.value_currency||''} ${Number(r.value_amount).toLocaleString()}</span>` : '';
+    const deadlineBlock = r.deadline_date
+      ? `<div class="detail-deadline ${cls}"><span class="days">${days!==null && days>=0 ? days : '—'}</span>${days!==null && days>=0 ? 'days left · ' : 'deadline passed · '}closes ${fmtDate(r.deadline_date)}</div>`
+      : `<div class="detail-deadline">No fixed deadline listed</div>`;
+
+    detail.innerHTML = `
+      <a class="back-link" href="/">&larr; Back to results</a>
+      <article class="detail-card ${cls}">
+        <h1 class="detail-title">${escapeHtml(r.title)}</h1>
+        <div class="detail-meta">
+          ${r.buyer ? `<span><b>${escapeHtml(r.buyer)}</b></span>` : ''}
+          ${r.country ? `<span>${escapeHtml(r.country)}</span>` : ''}
+          <span>Published ${fmtDate(r.published_date)}</span>
+        </div>
+        <div class="detail-tags">
+          <span class="tag">${escapeHtml(formatSource(r.source))}</span>
+          ${r.sector_label ? `<span class="tag">${escapeHtml(r.sector_label)}</span>` : ''}
+          ${value ? `<span class="tag">${value}</span>` : ''}
+        </div>
+        ${deadlineBlock}
+        <div class="detail-desc">${r.description ? escapeHtml(r.description) : '<em>No further description provided by the source.</em>'}</div>
+        <a class="detail-cta" href="${r.url}" target="_blank" rel="noopener">View original notice &amp; apply →</a>
+        <div class="detail-note">Applications are submitted on the source's own site — Ledger only aggregates the notice.</div>
+      </article>`;
+  }catch(e){
+    detail.innerHTML = `
+      <a class="back-link" href="/">&larr; Back to results</a>
+      <div class="empty"><h2>Couldn't reach the server</h2><p>Check that the backend is running.</p></div>`;
+  }
+}
+
+function matchDetailRoute(){
+  const m = window.location.pathname.match(/^\/contract\/([^/]+)\/?$/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+qs('applyBtn').addEventListener('click', () => { state.page = 1; search(); });
+qs('resetBtn').addEventListener('click', () => {
+  document.querySelectorAll('.filters input, .filters select').forEach(el => el.value = '');
+  qs('keyword').value = '';
+  state.page = 1;
+  search();
+});
+qs('keyword').addEventListener('keydown', (e) => { if(e.key === 'Enter'){ state.page = 1; search(); } });
+qs('sortSelect').addEventListener('change', () => { state.page = 1; search(); });
+qs('prevPage').addEventListener('click', () => { if(state.page>1){ state.page--; search(); } });
+qs('nextPage').addEventListener('click', () => { state.page++; search(); });
+
+const detailId = matchDetailRoute();
+if(detailId){
+  renderDetail(detailId);
+} else {
+  loadFacets();
+  loadHealth();
+  search();
+}
+</script>
+</body>
+</html>
