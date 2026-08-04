@@ -11,6 +11,7 @@ const { scrapeAuTender } = require('./scrapers/auTender');
 const { scrapeUkFindTender } = require('./scrapers/ukFindTender');
 const { scrapeUndp } = require('./scrapers/undp');
 const { scrapeCdb } = require('./scrapers/cdb');
+const { scrapeCaricom } = require('./scrapers/caricom');
 const { scrapeGuyanaEprocure } = require('./scrapers/guyanaEprocure');
 const { scrapeTtProcureTT } = require('./scrapers/ttProcureTT');
 const { scrapeColombiaSecop } = require('./scrapers/colombiaSecop');
@@ -46,6 +47,7 @@ async function runAllScrapers() {
     { name: 'uk_find_tender', fn: () => scrapeUkFindTender({ daysBack: 7 }) },
     { name: 'undp', fn: () => scrapeUndp() },
     { name: 'cdb', fn: () => scrapeCdb() },
+    { name: 'caricom', fn: () => scrapeCaricom() },
     { name: 'guyana_eprocure', fn: () => scrapeGuyanaEprocure() },
     { name: 'tt_procurett', fn: () => scrapeTtProcureTT() },
     { name: 'colombia_secop', fn: () => scrapeColombiaSecop({ limit: 100 }) },
