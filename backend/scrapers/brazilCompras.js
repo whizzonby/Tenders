@@ -32,7 +32,7 @@ async function scrapeBrazilCompras({ daysBack = 21, pageSize = 50 } = {}) {
       tamanhoPagina: String(pageSize),
       pagina: '1',
     });
-    const res = await fetch(`${BASE}?${params.toString()}`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const res = await fetch(`${BASE}?${params.toString()}`, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 20000 });
     if (!res.ok) {
       throw new Error(`Brazil Compras (modalidade ${codigoModalidade}): HTTP ${res.status}`);
     }

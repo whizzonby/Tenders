@@ -15,7 +15,7 @@ function makeId(sourceId) {
 }
 
 async function scrapeCdb() {
-  const res = await fetch(URL, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' } });
+  const res = await fetch(URL, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36' }, timeout: 20000 });
   if (!res.ok) {
     throw new Error(`CDB: HTTP ${res.status}`);
   }

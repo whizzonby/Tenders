@@ -17,7 +17,7 @@ function makeId(sourceId) {
 async function scrapeDominicanRepublic({ daysBack = 75 } = {}) {
   const year = new Date().getFullYear();
   const url = `https://data.open-contracting.org/en/publication/22/download?name=${year}.jsonl.gz`;
-  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 40000 });
   if (!res.ok) {
     throw new Error(`Dominican Republic: HTTP ${res.status}`);
   }

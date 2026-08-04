@@ -20,7 +20,7 @@ async function scrapeAuTender({ daysBack = 14 } = {}) {
   const to = new Date();
   const url = `${BASE}/${isoZ(from)}/${isoZ(to)}`;
 
-  const res = await fetch(url);
+  const res = await fetch(url, { timeout: 20000 });
   if (!res.ok) {
     throw new Error(`AusTender: HTTP ${res.status}`);
   }

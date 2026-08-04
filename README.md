@@ -25,6 +25,10 @@ or feed at all, added only after checking robots.txt and Terms for any restricti
 | **Colombia SECOP II** | Colombian public procurement | No |
 | **Brazil Compras.gov.br / PNCP** | Federal competitive tenders (Concorrência, Pregão) | No |
 | **Dominican Republic** | DGCP procurement (via OCP's bulk data mirror — runs ~6-7 weeks behind real time) | No |
+| **South Africa eTenders** | South African government procurement | No |
+| **Kenya PPIP** | Kenyan public tender notices | No |
+| **Ghana GHANEPS** | Ghanaian public procurement | No |
+| **Peru SEACE** | Peruvian public procurement (via OECE's OCDS portal) | No |
 | **Generic RSS** (incl. OECS by default) | Any tender portal that publishes a feed | Depends on the feed |
 
 This is a *foundation*, not a finished universe of every tender on Earth — no such
@@ -80,15 +84,21 @@ Several were technically scrapable but skipped anyway on principle:
 
 ### Tier 2 (national portals) progress
 
-Confirmed real, free public APIs exist for these but they aren't built yet —
-straightforward to add:
-- **South Africa** eTenders (OCDS API, `ocds-api.etenders.gov.za`)
-- **Kenya** PPIP (OCDS bulk files)
-- **Tanzania** NeST (OCDS API, server is intermittently slow)
-- **Rwanda** UMUCYO (OCDS monthly bulk datasets)
-- **Ghana** GHANEPS (OCDS monthly record packages, zipped)
-- **Argentina** COMPR.AR (CSV distributions via `datos.gob.ar`, not OCDS)
-- **Peru** SEACE (OCDS monthly bulk ZIP files via OECE)
+South Africa, Kenya, Ghana, and Peru are now integrated (table above). Two more
+confirmed-working sources were attempted and abandoned after hitting reliability
+problems during implementation, not policy issues:
+- **Rwanda** UMUCYO — the dataset-listing endpoint works, but its actual file
+  download endpoint hung indefinitely on every attempt (confirmed repeatedly, not a
+  one-off blip) — a scraper against it risks stalling the entire scheduled scrape
+  cycle, since scrapers currently run sequentially. Skipped rather than shipped
+  unreliable.
+- **Argentina** COMPR.AR — real CSV data via `datos.gob.ar`, but the only available
+  file mixes every year since 2015 into one 55MB download with no way to filter
+  server-side, and processing it hung for an extended period during testing.
+  Disproportionate cost for the benefit; skipped.
+- **Tanzania** NeST — confirmed to have a real OCDS API, but noted as
+  intermittently slow/timing out during research; not attempted given the above two
+  experiences with unreliable endpoints.
 
 Found but not usable without something this project can't provide:
 - **Chile** ChileCompra — real API, but the free key requires a Chilean national ID
@@ -116,7 +126,11 @@ Found but not usable without something this project can't provide:
 ## How it works
 
 - `backend/scrapers/*` — one file per source, each normalizes that source's data into
-  a common shape and returns an array of contract rows.
+  a common shape and returns an array of contract rows. Every `fetch` call has an
+  explicit timeout (`timeout: <ms>`, node-fetch's native option) — scrapers run
+  sequentially in `scheduler.js`, so one hung request without a timeout would block
+  every source after it for the rest of that cycle (this happened during
+  development against a since-abandoned source; see Tier 2 notes below).
 - `backend/db.js` — SQLite (with full-text search) stores everything, deduped by a
   stable hash of source+ID, so re-running scrapers just updates existing rows.
 - `backend/scheduler.js` — runs all scrapers on a cron schedule (default every 6

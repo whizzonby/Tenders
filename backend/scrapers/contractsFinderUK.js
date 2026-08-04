@@ -25,7 +25,7 @@ async function scrapeContractsFinderUK({ daysBack = 14 } = {}) {
   });
 
   const url = `${BASE}?${params.toString()}`;
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  const res = await fetch(url, { headers: { Accept: 'application/json' }, timeout: 20000 });
   if (!res.ok) {
     throw new Error(`Contracts Finder UK: HTTP ${res.status}`);
   }

@@ -49,6 +49,7 @@ async function scrapeTedEU({ keyword = '', daysBack = 14, limit = 100 } = {}) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    timeout: 20000,
   });
   if (!res.ok) {
     throw new Error(`TED EU: HTTP ${res.status}`);

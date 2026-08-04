@@ -35,7 +35,7 @@ async function scrapeSamGov({ daysBack = 7, limit = 100 } = {}) {
     limit: String(limit),
   });
 
-  const res = await fetch(`${BASE}?${params.toString()}`, { headers: { Accept: 'application/json' } });
+  const res = await fetch(`${BASE}?${params.toString()}`, { headers: { Accept: 'application/json' }, timeout: 20000 });
   if (!res.ok) {
     throw new Error(`SAM.gov: HTTP ${res.status}`);
   }

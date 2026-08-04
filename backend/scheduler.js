@@ -16,6 +16,10 @@ const { scrapeTtProcureTT } = require('./scrapers/ttProcureTT');
 const { scrapeColombiaSecop } = require('./scrapers/colombiaSecop');
 const { scrapeBrazilCompras } = require('./scrapers/brazilCompras');
 const { scrapeDominicanRepublic } = require('./scrapers/dominicanRepublic');
+const { scrapeSouthAfricaEtenders } = require('./scrapers/southAfricaEtenders');
+const { scrapeKenyaPpip } = require('./scrapers/kenyaPpip');
+const { scrapeGhanaGhaneps } = require('./scrapers/ghanaGhaneps');
+const { scrapePeruSeace } = require('./scrapers/peruSeace');
 const { scrapeGenericRSS } = require('./scrapers/genericRSS');
 
 function loadFeedsConfig() {
@@ -47,6 +51,10 @@ async function runAllScrapers() {
     { name: 'colombia_secop', fn: () => scrapeColombiaSecop({ limit: 100 }) },
     { name: 'brazil_compras', fn: () => scrapeBrazilCompras({ daysBack: 21 }) },
     { name: 'dominican_republic', fn: () => scrapeDominicanRepublic({ daysBack: 75 }) },
+    { name: 'south_africa_etenders', fn: () => scrapeSouthAfricaEtenders({ daysBack: 14 }) },
+    { name: 'kenya_ppip', fn: () => scrapeKenyaPpip({ daysBack: 14 }) },
+    { name: 'ghana_ghaneps', fn: () => scrapeGhanaGhaneps() },
+    { name: 'peru_seace', fn: () => scrapePeruSeace() },
     { name: 'rss_feeds', fn: () => scrapeGenericRSS(loadFeedsConfig()) },
   ];
 

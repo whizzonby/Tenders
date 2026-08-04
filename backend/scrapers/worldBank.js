@@ -25,7 +25,7 @@ async function scrapeWorldBank({ rows = 200 } = {}) {
     rows: String(rows),
     os: '0',
   });
-  const res = await fetch(`${BASE}?${params.toString()}`, { headers: { Accept: 'application/json' } });
+  const res = await fetch(`${BASE}?${params.toString()}`, { headers: { Accept: 'application/json' }, timeout: 20000 });
   if (!res.ok) {
     throw new Error(`World Bank: HTTP ${res.status}`);
   }

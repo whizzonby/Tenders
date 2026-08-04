@@ -25,7 +25,7 @@ function makeId(sourceId) {
 }
 
 async function scrapeUndp() {
-  const res = await fetch(FEED_URL, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  const res = await fetch(FEED_URL, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 20000 });
   if (!res.ok) {
     throw new Error(`UNDP: HTTP ${res.status}`);
   }

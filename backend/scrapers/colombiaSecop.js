@@ -19,7 +19,7 @@ async function scrapeColombiaSecop({ limit = 100 } = {}) {
     $limit: String(limit),
   });
 
-  const res = await fetch(`${BASE}?${params.toString()}`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  const res = await fetch(`${BASE}?${params.toString()}`, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 20000 });
   if (!res.ok) {
     throw new Error(`Colombia SECOP: HTTP ${res.status}`);
   }
