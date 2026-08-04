@@ -25,6 +25,9 @@ router.get('/', (req, res) => {
   if (sector) { where.push('(sector = @sector OR sector_label LIKE @sectorLike)'); params.sector = sector; params.sectorLike = `%${sector}%`; }
   if (minValue) { where.push('value_amount >= @minValue'); params.minValue = Number(minValue); }
   if (maxValue) { where.push('value_amount <= @maxValue'); params.maxValue = Number(maxValue); }
+  // Hide contracts whose deadline has already passed; contracts with no
+  // deadline (deadline_date IS NULL) are kept since they may still be open.
+  where.push("(deadline_date IS NULL OR deadline_date >= date('now'))");
   if (deadlineBefore) { where.push('deadline_date <= @deadlineBefore'); params.deadlineBefore = deadlineBefore; }
   if (deadlineAfter) { where.push('deadline_date >= @deadlineAfter'); params.deadlineAfter = deadlineAfter; }
   if (publishedAfter) { where.push('published_date >= @publishedAfter'); params.publishedAfter = publishedAfter; }
